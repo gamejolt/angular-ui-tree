@@ -636,6 +636,9 @@
             element.addClass(config.treeClass);
           }
 
+          // Hack in a way to get the scope.
+          element.data( 'scope', scope );
+
           scope.$emptyElm = angular.element($window.document.createElement('div'));
           if (config.emptyTreeClass) {
             scope.$emptyElm.addClass(config.emptyTreeClass);
@@ -749,6 +752,9 @@
             element.addClass(config.nodesClass);
           }
 
+          // Hack in a way to get the scope.
+          element.data( 'scope', scope );
+
           var ngModel = controllersArr[0];
           var treeNodeCtrl = controllersArr[1];
           var treeCtrl = controllersArr[2];
@@ -797,6 +803,21 @@
 
     .directive('uiTreeNode', ['treeConfig', '$uiTreeHelper', '$window', '$document','$timeout',
       function (treeConfig, $uiTreeHelper, $window, $document, $timeout) {
+
+        function _findScopeElement( elem )
+        {
+          while ( elem && !elem.data( 'scope' ) ) {
+            if ( elem[0] && elem[0].parentNode ) {
+              elem = angular.element( elem[0].parentNode );
+            }
+            else {
+              elem = undefined;
+            }
+          }
+
+          return elem;
+        }
+
         return {
           require: ['^uiTreeNodes', '^uiTree'],
           restrict: 'A',
@@ -807,6 +828,10 @@
             if (config.nodeClass) {
               element.addClass(config.nodeClass);
             }
+
+            // Hack in a way to get the scope.
+            element.data( 'scope', scope );
+
             scope.init(controllersArr);
 
             scope.collapsed = !!$uiTreeHelper.getNodeAttribute(scope, 'collapsed');
@@ -847,7 +872,13 @@
 
               // the element which is clicked.
               var eventElm = angular.element(e.target);
-              var eventScope = eventElm.scope();
+              // var eventScope = eventElm.scope();
+
+              // Find the scope that this element references.
+              // May have to crawl up to a parent node.
+              var scopeElm = _findScopeElement( eventElm );
+              var eventScope = scopeElm.data( 'scope' );
+
               if (!eventScope || !eventScope.$type) {
                 return;
               }
@@ -1074,7 +1105,8 @@
                 if (!pos.dirAx) {
                   var targetBefore, targetNode;
                   // check it's new position
-                  targetNode = targetElm.scope();
+                  // targetNode = targetElm.scope();
+                  targetNode = targetElm.data( 'scope' );
                   var isEmpty = false;
                   if (!targetNode) {
                     return;
@@ -1235,6 +1267,10 @@
           if (config.handleClass) {
             element.addClass(config.handleClass);
           }
+
+          // Hack in a way to get the scope.
+          element.data( 'scope', scope );
+
           // connect with the tree node.
           if (scope != treeNodeCtrl.scope) {
             scope.$nodeScope = treeNodeCtrl.scope;
